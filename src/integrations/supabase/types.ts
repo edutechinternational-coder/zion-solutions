@@ -240,12 +240,65 @@ export type Database = {
           total_cents: number
         }[]
       }
+      decide_loan: {
+        Args: { _approve: boolean; _loan_id: string; _note?: string }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          first_due_date: string | null
+          id: string
+          installment_cents: number
+          monthly_rate: number
+          paid_cents: number
+          principal_cents: number
+          purpose: string | null
+          status: Database["public"]["Enums"]["loan_status"]
+          term_months: number
+          total_due_cents: number
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "loans"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_late_loans: { Args: never; Returns: undefined }
+      register_payment: {
+        Args: { _amount_cents: number; _loan_id: string; _method?: string }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          first_due_date: string | null
+          id: string
+          installment_cents: number
+          monthly_rate: number
+          paid_cents: number
+          principal_cents: number
+          purpose: string | null
+          status: Database["public"]["Enums"]["loan_status"]
+          term_months: number
+          total_due_cents: number
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "loans"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
