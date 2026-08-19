@@ -1,0 +1,12 @@
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mark_late_loans() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.capital_summary() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.decide_loan(uuid, boolean, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.register_payment(uuid, bigint, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.capital_summary() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.decide_loan(uuid, boolean, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.register_payment(uuid, bigint, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO service_role;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mark_late_loans() TO service_role;
