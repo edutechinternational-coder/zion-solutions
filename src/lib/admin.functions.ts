@@ -31,7 +31,7 @@ export const decideLoan = createServerFn({ method: "POST" })
       _actor: context.userId,
       _loan_id: data.loanId,
       _approve: data.approve,
-      _note: data.note,
+      ...(data.note ? { _note: data.note } : {}),
     });
     if (error) throw safeDbError(error.message, "Ação não concluída");
     return { ok: true as const };
