@@ -41,3 +41,25 @@ security memory so future scans do not re-flag settled decisions.
 2. Lovable security scan run, with no new unresolved findings.
 3. Any new database table has: GRANTs, RLS enabled, and policies scoped to `auth.uid()` or an admin role check.
 4. Any new `SECURITY DEFINER` function has `EXECUTE` revoked from `anon` unless it is deliberately public.
+
+## Baseline de regras aprovadas e alerta de regressão
+
+`security/baseline.json` congela as regras já resolvidas ou aceitas conscientemente
+(ex.: `SUPA_authenticated_security_definer_function_executable` = *fixed*,
+`payments_missing_write_policies` = *accepted*).
+
+Para confirmar em segundos que nada regrediu:
+
+```bash
+bun run security:baseline
+```
+
+O script `scripts/check-security-baseline.mjs` reaplica cada regra sobre o estado
+atual do repositório (grants efetivos nas migrações, chamadas de RPC privilegiada
+fora de módulos de servidor, guardas `requireSupabaseAuth` + `assertAdmin`,
+políticas fail-closed em `loans`/`payments`) e sai com código 1 na primeira
+regressão. O mesmo comando roda no job `audit` do workflow **Security Gate**,
+então uma regressão reprova o PR.
+
+Ao resolver ou aceitar um novo finding, adicione a regra correspondente ao
+baseline junto com a asserção que a verifica.
