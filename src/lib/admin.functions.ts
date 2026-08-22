@@ -28,9 +28,10 @@ export const decideLoan = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.rpc("decide_loan", {
+      _actor: context.userId,
       _loan_id: data.loanId,
       _approve: data.approve,
-      _note: data.note ?? null,
+      _note: data.note,
     });
     if (error) throw safeDbError(error.message, "Ação não concluída");
     return { ok: true as const };
@@ -51,6 +52,7 @@ export const registerPayment = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.rpc("register_payment", {
+      _actor: context.userId,
       _loan_id: data.loanId,
       _amount_cents: data.amountCents,
       _method: data.method,
