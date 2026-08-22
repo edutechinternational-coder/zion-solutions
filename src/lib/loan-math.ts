@@ -45,3 +45,59 @@ export const LOAN_STATUS_LABEL: Record<string, string> = {
   quitado: "Quitado",
   atrasado: "Em atraso",
 };
+
+export type Installment = {
+  number: number;
+  dueDate: string | null;
+  amountCents: number;
+  paidCents: number;
+  status: "quitada" | "parcial" | "aberta" | "atrasada";
+};
+
+function addMonths(iso: string, months: number): string {
+  const d = new Date(`${iso}T12:00:00`);
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + months);
+  if (d.getDate() < day) d.setDate(0);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Distribui o valor já pago sobre as parcelas, na ordem de vencimento. */
+export function buildSchedule(loan: {
+  term_months: number;
+  installment_cents: number;
+  total_due_cents: number;
+  paid_cents: number;
+  first_due_date: string | null;
+}): Installment[] {
+  const hoje = new Date().toISOString().slice(0, 10);
+  let restante = loan.paid_cents;
+  const parcelas: Installment[] = [];
+
+  for (let n = 1; n <= loan.term_months; n++) {
+    const amountCents =
+      n === loan.term_months
+        ? loan.total_due_cents - loan.installment_cents * (loan.term_months - 1)
+        : loan.installment_cents;
+    const paidCents = Math.max(0, Math.min(amountCents, restante));
+    restante -= paidCents;
+    const dueDate = loan.first_due_date ? addMonths(loan.first_due_date, n - 1) : null;
+
+    let status: Installment["status"];
+    if (paidCents >= amountCents) status = "quitada";
+    else if (dueDate && dueDate < hoje) status = "atrasada";
+    else if (paidCents > 0) status = "parcial";
+    else status = "aberta";
+
+    parcelas.push({ number: n, dueDate, amountCents, paidCents, status });
+  }
+
+  return parcelas;
+}
+
+export const INSTALLMENT_STATUS_LABEL: Record<Installment["status"], string> = {
+  quitada: "Paga",
+  parcial: "Parcial",
+  aberta: "A vencer",
+  atrasada: "Em atraso",
+};
