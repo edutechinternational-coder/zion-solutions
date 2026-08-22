@@ -37,6 +37,10 @@ jobs:
       - name: Lint
         run: bun run lint
 
+      - name: Security baseline (regressão de regras aprovadas)
+        # Falha se qualquer regra aprovada em security/baseline.json regredir.
+        run: bun run security:baseline
+
       - name: Dependency vulnerability audit
         # Fails the build on any known vulnerability at or above the given level.
         run: bun audit --audit-level=moderate

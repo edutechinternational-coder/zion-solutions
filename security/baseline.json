@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "updated": "2026-08-22",
+  "description": "Baseline de segurança aprovado da Zion. Cada regra corresponde a um finding já resolvido ou aceito. O script scripts/check-security-baseline.mjs falha a build se qualquer regra regredir.",
+  "privilegedFunctions": [
+    "capital_summary",
+    "decide_loan",
+    "register_payment",
+    "has_role",
+    "handle_new_user",
+    "mark_late_loans"
+  ],
+  "rules": [
+    {
+      "id": "SUPA_authenticated_security_definer_function_executable",
+      "status": "fixed",
+      "assert": "no_grant_to_authenticated_on_privileged_functions",
+      "rationale": "Funções SECURITY DEFINER só podem ser executadas pelo service_role, através de server functions autenticadas que revalidam o papel de admin."
+    },
+    {
+      "id": "SUPA_anon_security_definer_function_executable",
+      "status": "fixed",
+      "assert": "no_grant_to_anon_or_public_on_privileged_functions",
+      "rationale": "Nenhuma função privilegiada é exposta ao papel anônimo ou a PUBLIC."
+    },
+    {
+      "id": "service_role_execute_present",
+      "status": "fixed",
+      "assert": "privileged_functions_granted_to_service_role",
+      "rationale": "As server functions chamam as RPCs com o cliente de service role; sem o GRANT elas quebram."
+    },
+    {
+      "id": "no_client_side_privileged_rpc",
+      "status": "fixed",
+      "assert": "privileged_rpc_only_in_server_modules",
+      "rationale": "Chamadas às RPCs privilegiadas só podem existir em módulos *.functions.ts / *.server.ts."
+    },
+    {
+      "id": "admin_server_functions_guarded",
+      "status": "fixed",
+      "assert": "admin_functions_use_requireSupabaseAuth_and_assertAdmin",
+      "rationale": "Toda server function administrativa exige sessão autenticada e revalida o papel de admin no servidor."
+    },
+    {
+      "id": "loans_missing_delete_policy",
+      "status": "accepted",
+      "assert": "no_delete_policy_on_loans",
+      "rationale": "Ausência de política de DELETE é intencional (fail-closed): empréstimos são registros financeiros imutáveis."
+    },
+    {
+      "id": "payments_missing_write_policies",
+      "status": "accepted",
+      "assert": "no_write_policy_on_payments",
+      "rationale": "Pagamentos só são criados por register_payment via service_role; escrita direta é intencionalmente impossível."
+    }
+  ]
+}
