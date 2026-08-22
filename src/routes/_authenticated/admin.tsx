@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { decideLoan, getCapitalSummary, registerPayment } from "@/lib/admin.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,25 +63,27 @@ function Admin() {
   const [capital, setCapital] = useState<Capital | null>(null);
   const [valorPagamento, setValorPagamento] = useState<Record<string, string>>({});
   const [ocupado, setOcupado] = useState(false);
+  const carregarCapital = useServerFn(getCapitalSummary);
+  const decidirEmprestimo = useServerFn(decideLoan);
+  const registrarPagamento = useServerFn(registerPayment);
 
   const carregar = useCallback(async () => {
-    const [{ data: l }, { data: c }, { data: p }] = await Promise.all([
+    const [{ data: l }, c, { data: p }] = await Promise.all([
       supabase
         .from("loans")
         .select(
           "id, user_id, principal_cents, term_months, installment_cents, total_due_cents, paid_cents, status, purpose, first_due_date, created_at",
         )
         .order("created_at", { ascending: false }),
-      supabase.rpc("capital_summary"),
+      carregarCapital().catch(() => null),
       supabase.from("profiles").select("id, full_name, phone, address_status"),
     ]);
     setLoans((l ?? []) as Loan[]);
-    const resumo = Array.isArray(c) ? (c[0] as Capital | undefined) : (c as Capital | null);
-    setCapital(resumo ?? null);
+    setCapital((c as Capital | null) ?? null);
     const map: Record<string, string> = {};
     for (const row of p ?? []) map[row.id] = row.full_name || "Sem nome";
     setNomes(map);
-  }, []);
+  }, [carregarCapital]);
 
   useEffect(() => {
     if (isAdmin) void carregar();
@@ -87,14 +91,17 @@ function Admin() {
 
   async function decidir(id: string, aprovar: boolean) {
     setOcupado(true);
-    const { error } = await supabase.rpc("decide_loan", { _loan_id: id, _approve: aprovar });
-    setOcupado(false);
-    if (error) {
-      toast.error("Ação não concluída", { description: error.message });
-      return;
+    try {
+      await decidirEmprestimo({ data: { loanId: id, approve: aprovar } });
+      toast.success(aprovar ? "Empréstimo aprovado" : "Solicitação reprovada");
+      void carregar();
+    } catch (e) {
+      toast.error("Ação não concluída", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setOcupado(false);
     }
-    toast.success(aprovar ? "Empréstimo aprovado" : "Solicitação reprovada");
-    void carregar();
   }
 
   async function pagar(id: string) {
@@ -105,19 +112,20 @@ function Admin() {
       return;
     }
     setOcupado(true);
-    const { error } = await supabase.rpc("register_payment", {
-      _loan_id: id,
-      _amount_cents: Math.round(reais * 100),
-      _method: "pix",
-    });
-    setOcupado(false);
-    if (error) {
-      toast.error("Pagamento não registrado", { description: error.message });
-      return;
+    try {
+      await registrarPagamento({
+        data: { loanId: id, amountCents: Math.round(reais * 100), method: "pix" },
+      });
+      setValorPagamento({ ...valorPagamento, [id]: "" });
+      toast.success("Pagamento registrado");
+      void carregar();
+    } catch (e) {
+      toast.error("Pagamento não registrado", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setOcupado(false);
     }
-    setValorPagamento({ ...valorPagamento, [id]: "" });
-    toast.success("Pagamento registrado");
-    void carregar();
   }
 
   if (loading) {

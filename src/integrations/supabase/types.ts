@@ -241,7 +241,12 @@ export type Database = {
         }[]
       }
       decide_loan: {
-        Args: { _approve: boolean; _loan_id: string; _note?: string }
+        Args: {
+          _actor: string
+          _approve: boolean
+          _loan_id: string
+          _note?: string
+        }
         Returns: {
           created_at: string
           decided_at: string | null
@@ -275,7 +280,12 @@ export type Database = {
       }
       mark_late_loans: { Args: never; Returns: undefined }
       register_payment: {
-        Args: { _amount_cents: number; _loan_id: string; _method?: string }
+        Args: {
+          _actor: string
+          _amount_cents: number
+          _loan_id: string
+          _method?: string
+        }
         Returns: {
           created_at: string
           decided_at: string | null
