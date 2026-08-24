@@ -82,6 +82,40 @@ type Profile = {
 
 const PIX_KEY = "pix@zion.cred";
 
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function maskCpf(value: string) {
+  return onlyDigits(value)
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function maskCep(value: string) {
+  return onlyDigits(value)
+    .slice(0, 8)
+    .replace(/(\d{5})(\d)/, "$1-$2");
+}
+
+function maskPhone(value: string) {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (digits.length <= 2) return digits ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function addressBadgeVariant(status: string) {
+  if (status === "verificado") return "default" as const;
+  if (status === "reprovado") return "destructive" as const;
+  return "outline" as const;
+}
+
 function statusVariant(status: string) {
   if (status === "quitado") return "secondary" as const;
   if (status === "atrasado" || status === "reprovado") return "destructive" as const;
@@ -99,6 +133,8 @@ function Painel() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+  const [mensagemSalvamento, setMensagemSalvamento] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   async function carregar() {
@@ -125,7 +161,12 @@ function Painel() {
     ]);
 
     if (p) {
-      setPerfil(p as Profile);
+      setPerfil({
+        ...(p as Profile),
+        cpf: p.cpf ? maskCpf(p.cpf) : null,
+        phone: p.phone ? maskPhone(p.phone) : null,
+        cep: p.cep ? maskCep(p.cep) : null,
+      });
     } else {
       // Sem linha de perfil ainda (cadastro antigo ou trigger não aplicada): cria na hora.
       const base: Profile = {
@@ -169,7 +210,43 @@ function Painel() {
       toast.error("Não foi possível salvar", { description: error.message });
       return;
     }
-    toast.success("Dados atualizados");
+    setMensagemSalvamento(
+      "Dados salvos com sucesso. A operação vai conferir seu endereço em até 24h.",
+    );
+    toast.success("Dados salvos com sucesso");
+  }
+
+  async function buscarCep(cep: string) {
+    const digits = onlyDigits(cep);
+    if (digits.length !== 8 || !perfil) return;
+    setBuscandoCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = (await response.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (data.erro) {
+        toast.error("CEP não encontrado", {
+          description: "Confira o número e digite o endereço manualmente.",
+        });
+        return;
+      }
+      const endereco = [data.logradouro, data.bairro, data.localidade, data.uf]
+        .filter(Boolean)
+        .join(", ");
+      setPerfil((atual) => (atual ? { ...atual, street: atual.street || endereco } : atual));
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Não foi possível consultar o CEP", {
+        description: "Digite o endereço manualmente.",
+      });
+    } finally {
+      setBuscandoCep(false);
+    }
   }
 
   const ativo = useMemo(
@@ -197,9 +274,9 @@ function Painel() {
               Seu crédito no Monte Sião, sempre transparente — 2% ao mês, sem taxa escondida.
             </p>
           </div>
-          <Button asChild>
-            <Link to="/solicitar">{ativo ? "Nova solicitação" : "Pedir empréstimo"}</Link>
-          </Button>
+          <p className="rounded-full bg-secondary px-4 py-2 text-sm text-muted-foreground">
+            Acompanhe tudo em um só lugar
+          </p>
         </header>
 
         {carregando ? (
@@ -253,8 +330,9 @@ function Painel() {
                   <div className="rounded-lg bg-secondary/70 p-4 text-sm">
                     <p className="font-medium">Como pagar</p>
                     <p className="text-muted-foreground">
-                      Pix para <span className="font-medium text-foreground">{PIX_KEY}</span> e envie
-                      o comprovante no WhatsApp da operação. A baixa aparece aqui no mesmo dia.
+                      Pix para <span className="font-medium text-foreground">{PIX_KEY}</span> e
+                      envie o comprovante no WhatsApp da operação. A baixa aparece aqui no mesmo
+                      dia.
                     </p>
                   </div>
                 </CardContent>
@@ -269,8 +347,8 @@ function Painel() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  Pedido em {formatDate(pendente.created_at)}. A operação analisa o capital livre e o
-                  endereço no Monte Sião — você recebe a resposta por aqui.
+                  Pedido em {formatDate(pendente.created_at)}. A operação analisa o capital livre e
+                  o endereço no Monte Sião. Sua análise leva até 24h após o envio dos dados.
                 </CardContent>
               </Card>
             ) : (
@@ -425,70 +503,123 @@ function Painel() {
               <TabsContent value="dados" className="mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Meus dados</CardTitle>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <CardTitle className="text-lg">Meus dados</CardTitle>
+                      <Badge
+                        variant="outline"
+                        className="border-amber-300 bg-amber-50 text-amber-800"
+                      >
+                        Cadastro: etapa 2 de 3
+                      </Badge>
+                    </div>
                     <CardDescription>
-                      O endereço no Monte Sião é conferido pela operação antes da primeira aprovação.
+                      Preencha seus dados. Depois, a operação confirma documento/selfie e endereço
+                      no Monte Sião.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {perfil ? (
                       <form onSubmit={salvarPerfil} className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="nome">Nome completo</Label>
+                          <Label htmlFor="nome" className="text-sm font-medium">
+                            Nome completo *
+                          </Label>
                           <Input
                             id="nome"
+                            placeholder="Maria Silva"
+                            required
                             maxLength={120}
                             value={perfil.full_name}
                             onChange={(e) => setPerfil({ ...perfil, full_name: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="cpf">CPF</Label>
+                          <Label htmlFor="cpf" className="text-sm font-medium">
+                            CPF *
+                          </Label>
                           <Input
                             id="cpf"
                             inputMode="numeric"
+                            placeholder="000.000.000-00"
+                            required
                             maxLength={14}
                             value={perfil.cpf ?? ""}
-                            onChange={(e) => setPerfil({ ...perfil, cpf: e.target.value })}
+                            onChange={(e) => setPerfil({ ...perfil, cpf: maskCpf(e.target.value) })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Telefone / WhatsApp</Label>
+                          <Label htmlFor="phone" className="text-sm font-medium">
+                            Telefone / WhatsApp *
+                          </Label>
                           <Input
                             id="phone"
-                            maxLength={20}
+                            inputMode="tel"
+                            placeholder="(92) 9XXXX-XXXX"
+                            required
+                            maxLength={15}
                             value={perfil.phone ?? ""}
-                            onChange={(e) => setPerfil({ ...perfil, phone: e.target.value })}
+                            onChange={(e) =>
+                              setPerfil({ ...perfil, phone: maskPhone(e.target.value) })
+                            }
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="cep">CEP</Label>
+                          <Label htmlFor="cep" className="text-sm font-medium">
+                            CEP
+                          </Label>
                           <Input
                             id="cep"
                             inputMode="numeric"
+                            placeholder="69000-000"
                             maxLength={9}
                             value={perfil.cep ?? ""}
-                            onChange={(e) => setPerfil({ ...perfil, cep: e.target.value })}
+                            onChange={(e) => {
+                              const cep = maskCep(e.target.value);
+                              setPerfil({ ...perfil, cep });
+                              void buscarCep(cep);
+                            }}
                           />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
-                          <Label htmlFor="street">Endereço no Monte Sião</Label>
+                          <Label htmlFor="street" className="text-sm font-medium">
+                            Endereço no Monte Sião *
+                          </Label>
                           <Input
                             id="street"
+                            placeholder="Rua, número, complemento e ponto de referência"
+                            required
                             maxLength={160}
                             value={perfil.street ?? ""}
                             onChange={(e) => setPerfil({ ...perfil, street: e.target.value })}
                           />
                         </div>
-                        <div className="flex items-center justify-between gap-3 sm:col-span-2">
-                          <Badge
-                            variant={perfil.address_status === "verificado" ? "default" : "secondary"}
-                          >
-                            Endereço: {perfil.address_status}
-                          </Badge>
-                          <Button type="submit" disabled={salvando}>
-                            Salvar dados
-                          </Button>
+                        <div className="space-y-3 rounded-lg border bg-secondary/40 p-4 sm:col-span-2">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <Badge
+                                variant={addressBadgeVariant(perfil.address_status)}
+                                className={
+                                  perfil.address_status === "pendente"
+                                    ? "border-amber-300 bg-amber-50 text-amber-800"
+                                    : undefined
+                                }
+                              >
+                                Endereço: {perfil.address_status}
+                              </Badge>
+                              <p className="text-sm text-muted-foreground">
+                                Sua análise leva até 24h após o envio dos dados.{" "}
+                                {buscandoCep ? "Buscando CEP..." : ""}
+                              </p>
+                              {mensagemSalvamento ? (
+                                <p className="text-sm font-medium text-primary">
+                                  {mensagemSalvamento}
+                                </p>
+                              ) : null}
+                            </div>
+                            <Button type="submit" disabled={salvando}>
+                              {salvando ? "Salvando..." : "Salvar dados"}
+                            </Button>
+                          </div>
                         </div>
                       </form>
                     ) : (
