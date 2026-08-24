@@ -1,9 +1,10 @@
 {
   "version": 1,
-  "updated": "2026-08-22",
+  "updated": "2026-08-24",
   "description": "Baseline de segurança aprovado da Zion. Cada regra corresponde a um finding já resolvido ou aceito. O script scripts/check-security-baseline.mjs falha a build se qualquer regra regredir.",
   "privilegedFunctions": [
     "capital_summary",
+    "create_loan_request",
     "decide_loan",
     "register_payment",
     "has_role",
