@@ -6,6 +6,13 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
@@ -81,6 +88,17 @@ type Profile = {
 };
 
 const PIX_KEY = "pix@zion.cred";
+
+const PHONE_COUNTRIES = [
+  { code: "+55", country: "Brasil", flag: "🇧🇷" },
+  { code: "+1", country: "Estados Unidos/Canadá", flag: "🇺🇸" },
+  { code: "+351", country: "Portugal", flag: "🇵🇹" },
+  { code: "+54", country: "Argentina", flag: "🇦🇷" },
+  { code: "+56", country: "Chile", flag: "🇨🇱" },
+  { code: "+57", country: "Colômbia", flag: "🇨🇴" },
+  { code: "+598", country: "Uruguai", flag: "🇺🇾" },
+  { code: "+595", country: "Paraguai", flag: "🇵🇾" },
+];
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "");
@@ -580,24 +598,32 @@ function Painel() {
                             Telefone / WhatsApp *
                           </Label>
                           <div className="flex gap-2">
-                            <Input
-                              aria-label="Código do país"
-                              className="w-28 shrink-0"
-                              inputMode="tel"
-                              placeholder="+55"
-                              required
-                              maxLength={4}
+                            <Select
                               value={getPhoneCountryCode(perfil.phone)}
-                              onChange={(e) =>
+                              onValueChange={(countryCode) =>
                                 setPerfil({
                                   ...perfil,
                                   phone: buildPhoneValue(
-                                    e.target.value,
+                                    countryCode,
                                     getPhoneLocalValue(perfil.phone),
                                   ),
                                 })
                               }
-                            />
+                            >
+                              <SelectTrigger
+                                aria-label="Selecionar país do telefone"
+                                className="w-40 shrink-0"
+                              >
+                                <SelectValue placeholder="País" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PHONE_COUNTRIES.map((country) => (
+                                  <SelectItem key={country.code} value={country.code}>
+                                    {country.flag} {country.country} {country.code}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <Input
                               id="phone"
                               inputMode="tel"
