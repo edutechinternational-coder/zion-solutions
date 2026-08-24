@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { Simulador } from "@/components/Simulador";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MONTHLY_RATE, brl, simulate } from "@/lib/loan-math";
+import { createLoanRequest } from "@/lib/loan.functions";
+import { brl, simulate } from "@/lib/loan-math";
 
 export const Route = createFileRoute("/_authenticated/solicitar")({
   head: () => ({
@@ -37,6 +38,7 @@ function Solicitar() {
   const [term, setTerm] = useState(3);
   const [finalidade, setFinalidade] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const solicitarEmprestimo = useServerFn(createLoanRequest);
 
   async function enviar() {
     if (finalidade.trim().length < 5) {
@@ -44,27 +46,25 @@ function Solicitar() {
       return;
     }
     setEnviando(true);
-    const { data: user } = await supabase.auth.getUser();
-    const sim = simulate(principal, term);
-    const { error } = await supabase.from("loans").insert({
-      user_id: user.user!.id,
-      principal_cents: sim.principalCents,
-      term_months: sim.termMonths,
-      monthly_rate: MONTHLY_RATE,
-      installment_cents: sim.installmentCents,
-      total_due_cents: sim.totalCents,
-      purpose: finalidade.trim().slice(0, 200),
-      status: "pendente",
-    });
-    setEnviando(false);
-    if (error) {
-      toast.error("Não foi possível enviar a solicitação", { description: error.message });
-      return;
+    try {
+      await solicitarEmprestimo({
+        data: {
+          principalCents: principal,
+          termMonths: term,
+          purpose: finalidade.trim().slice(0, 200),
+        },
+      });
+      toast.success("Solicitação enviada!", {
+        description: "A equipe da Zion vai analisar e responder em breve.",
+      });
+      navigate({ to: "/painel" });
+    } catch (e) {
+      toast.error("Não foi possível enviar a solicitação", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setEnviando(false);
     }
-    toast.success("Solicitação enviada!", {
-      description: "A equipe da Zion vai analisar e responder em breve.",
-    });
-    navigate({ to: "/painel" });
   }
 
   const sim = simulate(principal, term);

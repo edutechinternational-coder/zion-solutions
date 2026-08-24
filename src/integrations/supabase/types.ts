@@ -240,6 +240,37 @@ export type Database = {
           total_cents: number
         }[]
       }
+      create_loan_request: {
+        Args: {
+          _actor: string
+          _principal_cents: number
+          _purpose?: string
+          _term_months: number
+        }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          first_due_date: string | null
+          id: string
+          installment_cents: number
+          monthly_rate: number
+          paid_cents: number
+          principal_cents: number
+          purpose: string | null
+          status: Database["public"]["Enums"]["loan_status"]
+          term_months: number
+          total_due_cents: number
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "loans"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       decide_loan: {
         Args: {
           _actor: string
