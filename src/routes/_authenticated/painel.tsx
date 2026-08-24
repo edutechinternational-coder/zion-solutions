@@ -101,13 +101,41 @@ function maskCep(value: string) {
 }
 
 function maskPhone(value: string) {
-  const digits = onlyDigits(value).slice(0, 11);
-  if (digits.length <= 2) return digits ? `(${digits}` : "";
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  const trimmed = value.trim();
+  const countryCode = trimmed.startsWith("+")
+    ? `+${onlyDigits(trimmed.split(" ")[0]).slice(0, 3)}`
+    : "+55";
+  const localValue = trimmed.startsWith("+") ? trimmed.replace(/^\+\d{1,3}\s*/, "") : trimmed;
+  const digits = onlyDigits(localValue).slice(0, 11);
+
+  let localPhone = "";
+  if (digits.length <= 2) {
+    localPhone = digits ? `(${digits}` : "";
+  } else if (digits.length <= 6) {
+    localPhone = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  } else if (digits.length <= 10) {
+    localPhone = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  } else {
+    localPhone = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   }
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+
+  return localPhone ? `${countryCode} ${localPhone}` : countryCode;
+}
+
+function getPhoneCountryCode(value: string | null) {
+  const match = value?.trim().match(/^\+(\d{1,3})/);
+  return match ? `+${match[1]}` : "+55";
+}
+
+function getPhoneLocalValue(value: string | null) {
+  return value?.trim().replace(/^\+\d{1,3}\s*/, "") ?? "";
+}
+
+function buildPhoneValue(countryCode: string, localValue: string) {
+  const codeDigits = onlyDigits(countryCode).slice(0, 3);
+  const normalizedCode = codeDigits ? `+${codeDigits}` : "+55";
+  const localPhone = maskPhone(localValue).replace(/^\+\d{1,3}\s*/, "");
+  return localPhone ? `${normalizedCode} ${localPhone}` : normalizedCode;
 }
 
 function addressBadgeVariant(status: string) {
@@ -200,7 +228,7 @@ function Painel() {
       .update({
         full_name: perfil.full_name.trim().slice(0, 120),
         cpf: perfil.cpf?.replace(/\D/g, "").slice(0, 11) || null,
-        phone: perfil.phone?.slice(0, 20) || null,
+        phone: perfil.phone?.slice(0, 25) || null,
         street: perfil.street?.slice(0, 160) || null,
         cep: perfil.cep?.replace(/\D/g, "").slice(0, 8) || null,
       })
@@ -551,17 +579,43 @@ function Painel() {
                           <Label htmlFor="phone" className="text-sm font-medium">
                             Telefone / WhatsApp *
                           </Label>
-                          <Input
-                            id="phone"
-                            inputMode="tel"
-                            placeholder="(92) 9XXXX-XXXX"
-                            required
-                            maxLength={15}
-                            value={perfil.phone ?? ""}
-                            onChange={(e) =>
-                              setPerfil({ ...perfil, phone: maskPhone(e.target.value) })
-                            }
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              aria-label="Código do país"
+                              className="w-28 shrink-0"
+                              inputMode="tel"
+                              placeholder="+55"
+                              required
+                              maxLength={4}
+                              value={getPhoneCountryCode(perfil.phone)}
+                              onChange={(e) =>
+                                setPerfil({
+                                  ...perfil,
+                                  phone: buildPhoneValue(
+                                    e.target.value,
+                                    getPhoneLocalValue(perfil.phone),
+                                  ),
+                                })
+                              }
+                            />
+                            <Input
+                              id="phone"
+                              inputMode="tel"
+                              placeholder="(92) 9XXXX-XXXX"
+                              required
+                              maxLength={15}
+                              value={getPhoneLocalValue(perfil.phone)}
+                              onChange={(e) =>
+                                setPerfil({
+                                  ...perfil,
+                                  phone: buildPhoneValue(
+                                    getPhoneCountryCode(perfil.phone),
+                                    e.target.value,
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="cep" className="text-sm font-medium">
