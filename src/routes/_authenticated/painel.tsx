@@ -181,6 +181,7 @@ function Painel() {
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [cepFora, setCepFora] = useState(false);
   const [mensagemSalvamento, setMensagemSalvamento] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
@@ -267,26 +268,36 @@ function Painel() {
     const digits = onlyDigits(cep);
     if (digits.length !== 8 || !perfil) return;
     setBuscandoCep(true);
+    setCepFora(false);
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
-      const data = (await response.json()) as {
-        erro?: boolean;
-        logradouro?: string;
-        bairro?: string;
-        localidade?: string;
-        uf?: string;
-      };
-      if (data.erro) {
+      const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${digits}`);
+      if (!response.ok) {
         toast.error("CEP não encontrado", {
           description: "Confira o número e digite o endereço manualmente.",
         });
         return;
       }
-      const endereco = [data.logradouro, data.bairro, data.localidade, data.uf]
+      const data = (await response.json()) as {
+        street?: string;
+        neighborhood?: string;
+        city?: string;
+        state?: string;
+      };
+      const bairro = data.neighborhood ?? "";
+      const isMonteSiao =
+        bairro.toLowerCase().includes("monte sião") ||
+        bairro.toLowerCase().includes("monte siao");
+      if (!isMonteSiao) {
+        setCepFora(true);
+        toast.warning("CEP fora do Monte Sião", {
+          description: "Apenas moradores do Monte Sião podem solicitar crédito. Verifique o endereço.",
+        });
+      }
+      const endereco = [data.street, bairro, data.city, data.state]
         .filter(Boolean)
         .join(", ");
       setPerfil((atual) => (atual ? { ...atual, street: atual.street || endereco } : atual));
-      toast.success("Endereço preenchido pelo CEP");
+      if (isMonteSiao) toast.success("Endereço preenchido pelo CEP");
     } catch {
       toast.error("Não foi possível consultar o CEP", {
         description: "Digite o endereço manualmente.",
@@ -688,8 +699,11 @@ function Painel() {
                                 Endereço: {perfil.address_status}
                               </Badge>
                               <p className="text-sm text-muted-foreground">
-                                Sua análise leva até 24h após o envio dos dados.{" "}
-                                {buscandoCep ? "Buscando CEP..." : ""}
+                                {buscandoCep
+                                  ? "Buscando CEP..."
+                                  : cepFora
+                                  ? "⚠️ CEP informado não pertence ao Monte Sião."
+                                  : "Sua análise leva até 24h após o envio dos dados."}
                               </p>
                               {mensagemSalvamento ? (
                                 <p className="text-sm font-medium text-primary">
