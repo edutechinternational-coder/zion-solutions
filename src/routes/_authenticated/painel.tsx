@@ -91,6 +91,7 @@ const PIX_KEY = "pix@zion.cred";
 
 const PHONE_COUNTRIES = [
   { code: "+55", country: "Brasil", flag: "🇧🇷" },
+  { code: "+44", country: "Reino Unido", flag: "🇬🇧" },
   { code: "+1", country: "Estados Unidos/Canadá", flag: "🇺🇸" },
   { code: "+351", country: "Portugal", flag: "🇵🇹" },
   { code: "+54", country: "Argentina", flag: "🇦🇷" },
