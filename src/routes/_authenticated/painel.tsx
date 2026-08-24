@@ -129,7 +129,7 @@ function Painel() {
     } else {
       // Sem linha de perfil ainda (cadastro antigo ou trigger não aplicada): cria na hora.
       const base: Profile = {
-        full_name: (user.user_metadata?.full_name as string | undefined) ?? "",
+        full_name: (user.user_metadata?.["full_name"] as string | undefined) ?? "",
         cpf: null,
         phone: null,
         street: null,
