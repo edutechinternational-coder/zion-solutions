@@ -23,6 +23,7 @@ const CLIENTES: Cliente[] = [
     papel: "Comerciante",
     bairro: "Monte Sião",
     citacao: "Consegui abrir meu pequeno mercado com o crédito da Zion. O pagamento por Pix facilita muito a vida.",
+    avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face",
     initials: "MD",
     color: "bg-emerald-500",
   },
@@ -31,6 +32,7 @@ const CLIENTES: Cliente[] = [
     papel: "Pescador",
     bairro: "Monte Sião",
     citacao: "Já peguei três empréstimos com eles. Sempre claros, sem surpresas. A comunidade confia.",
+    avatar: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200&h=200&fit=crop&crop=face",
     initials: "JB",
     color: "bg-sky-500",
   },
@@ -39,6 +41,7 @@ const CLIENTES: Cliente[] = [
     papel: "Costureira",
     bairro: "Monte Sião",
     citacao: "Precisava de material para aumentar a produção. Em dois dias o dinheiro estava na minha conta.",
+    avatar: "https://images.unsplash.com/photo-1580894742597-87bc8789db3d?w=200&h=200&fit=crop&crop=face",
     initials: "AP",
     color: "bg-violet-500",
   },
@@ -47,6 +50,7 @@ const CLIENTES: Cliente[] = [
     papel: "Mototaxista",
     bairro: "Monte Sião",
     citacao: "O simulador já mostra o valor real da parcela. É assim que deve ser, sem letra miúda.",
+    avatar: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=200&h=200&fit=crop&crop=face",
     initials: "S",
     color: "bg-amber-600",
   },
@@ -55,14 +59,16 @@ const CLIENTES: Cliente[] = [
     papel: "Dona de casa",
     bairro: "Monte Sião",
     citacao: "Quando precisei para emergência, a equipe me atendeu rápido e com respeito.",
+    avatar: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=200&h=200&fit=crop&crop=face",
     initials: "L",
     color: "bg-rose-500",
   },
   {
     nome: "Carlos André",
-    papel: "Lancheira",
+    papel: "Lanchonete",
     bairro: "Monte Sião",
     citacao: "Renovei o meu ponto de venda. Agora atendo mais clientes e pago tudo em dia.",
+    avatar: "https://images.unsplash.com/photo-1545167622-3a6ac756afa4?w=200&h=200&fit=crop&crop=face",
     initials: "CA",
     color: "bg-indigo-500",
   },
@@ -195,9 +201,9 @@ export function ClientesCarrossel() {
             <CarouselItem key={cliente.nome} className="md:basis-1/2 lg:basis-1/3">
               <Card className="h-full border-border/70">
                 <CardContent className="flex h-full flex-col items-center gap-4 p-6 text-center">
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-24 w-24 ring-4 ring-background shadow-md">
                     {cliente.avatar && <AvatarImage src={cliente.avatar} alt={cliente.nome} />}
-                    <AvatarFallback className={cn("text-primary-foreground", cliente.color)}>
+                    <AvatarFallback className={cn("text-2xl font-bold text-primary-foreground", cliente.color)}>
                       {cliente.initials}
                     </AvatarFallback>
                   </Avatar>
