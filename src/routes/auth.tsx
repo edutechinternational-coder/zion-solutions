@@ -84,20 +84,6 @@ function AuthPage() {
   }
 
   async function entrarComGoogle() {
-    // Em localhost, o Lovable Cloud Auth não funciona — usa o OAuth nativo do Supabase
-    const isLocalhost =
-      typeof window !== "undefined" &&
-      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-
-    if (isLocalhost) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/painel` },
-      });
-      if (error) toast.error("Falha no login com Google", { description: error.message });
-      return;
-    }
-
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
