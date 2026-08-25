@@ -225,7 +225,12 @@ function Painel() {
         cep: null,
         address_status: "pendente",
       };
-      await supabase.from("profiles").insert({ id: user.id, full_name: base.full_name });
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, full_name: base.full_name }, { onConflict: "id" });
+      if (insertError) {
+        console.error("[painel] falha ao criar perfil:", insertError.message);
+      }
       setPerfil(base);
     }
 
@@ -242,17 +247,26 @@ function Painel() {
     e.preventDefault();
     if (!perfil) return;
     setSalvando(true);
-    const { data: user } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      setSalvando(false);
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
-      .update({
-        full_name: perfil.full_name.trim().slice(0, 120),
-        cpf: perfil.cpf?.replace(/\D/g, "").slice(0, 11) || null,
-        phone: perfil.phone?.slice(0, 25) || null,
-        street: perfil.street?.slice(0, 160) || null,
-        cep: perfil.cep?.replace(/\D/g, "").slice(0, 8) || null,
-      })
-      .eq("id", user.user!.id);
+      .upsert(
+        {
+          id: userId,
+          full_name: perfil.full_name.trim().slice(0, 120),
+          cpf: perfil.cpf?.replace(/\D/g, "").slice(0, 11) || null,
+          phone: perfil.phone?.slice(0, 25) || null,
+          street: perfil.street?.slice(0, 160) || null,
+          cep: perfil.cep?.replace(/\D/g, "").slice(0, 8) || null,
+        },
+        { onConflict: "id" },
+      );
     setSalvando(false);
     if (error) {
       toast.error("Não foi possível salvar", { description: error.message });
