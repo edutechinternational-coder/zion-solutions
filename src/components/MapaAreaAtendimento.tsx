@@ -1,9 +1,19 @@
 import { useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 
-// Token da variável de ambiente
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
+// mapbox-gl é carregado dinamicamente para evitar bundle SSR (>2MB)
+// O componente é client-only
+
+let mapboxgl: typeof import("mapbox-gl") | null = null;
+
+async function getMapbox() {
+  if (!mapboxgl) {
+    const mod = await import("mapbox-gl");
+    mapboxgl = mod.default ?? (mod as unknown as typeof import("mapbox-gl"));
+  }
+  return mapboxgl;
+}
+
+// Token da variável de ambiente — aplicado dinamicamente no useEffect
 
 // Polígono do bairro Monte Sião, Manaus/AM
 // Todos os vértices fornecidos pelo usuário via Google Maps "Medir distância"
@@ -40,91 +50,105 @@ export function MapaAreaAtendimento() {
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: (import.meta.env.VITE_MAPBOX_STYLE_URL as string) || "mapbox://styles/mapbox/streets-v12",
-      center: CENTER,
-      zoom: ZOOM,
-      attributionControl: false,
-    });
+    let cancelled = false;
 
-    mapRef.current = map;
+    getMapbox().then((mgl) => {
+      if (cancelled || !mapContainer.current || mapRef.current) return;
 
-    map.addControl(new mapboxgl.AttributionControl({ compact: true }));
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+      // Inject CSS once
+      if (!document.querySelector('link[href*="mapbox-gl"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://api.mapbox.gl/mapbox-gl-js/v3.9.0/mapbox-gl.css";
+        document.head.appendChild(link);
+      }
 
-    map.on("load", () => {
-      // Área de atendimento — polígono preenchido
-      map.addSource("monte-siao", {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: { name: "Monte Sião" },
-          geometry: {
-            type: "Polygon",
-            coordinates: [MONTE_SIAO_POLYGON],
+      mgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
+
+      const map = new mgl.Map({
+        container: mapContainer.current,
+        style:
+          (import.meta.env.VITE_MAPBOX_STYLE_URL as string) ||
+          "mapbox://styles/mapbox/streets-v12",
+        center: CENTER,
+        zoom: ZOOM,
+        attributionControl: false,
+      });
+
+      mapRef.current = map;
+
+      map.addControl(new mgl.AttributionControl({ compact: true }));
+      map.addControl(new mgl.NavigationControl({ showCompass: false }), "top-right");
+
+      map.on("load", () => {
+        map.addSource("monte-siao", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: { name: "Monte Sião" },
+            geometry: {
+              type: "Polygon",
+              coordinates: [MONTE_SIAO_POLYGON],
+            },
           },
-        },
-      });
+        });
 
-      // Fill semitransparente
-      map.addLayer({
-        id: "monte-siao-fill",
-        type: "fill",
-        source: "monte-siao",
-        paint: {
-          "fill-color": "#16a34a", // verde primário do projeto
-          "fill-opacity": 0.18,
-        },
-      });
+        map.addLayer({
+          id: "monte-siao-fill",
+          type: "fill",
+          source: "monte-siao",
+          paint: {
+            "fill-color": "#16a34a",
+            "fill-opacity": 0.18,
+          },
+        });
 
-      // Contorno do bairro
-      map.addLayer({
-        id: "monte-siao-border",
-        type: "line",
-        source: "monte-siao",
-        paint: {
-          "line-color": "#16a34a",
-          "line-width": 2.5,
-          "line-dasharray": [4, 2],
-        },
-      });
+        map.addLayer({
+          id: "monte-siao-border",
+          type: "line",
+          source: "monte-siao",
+          paint: {
+            "line-color": "#16a34a",
+            "line-width": 2.5,
+            "line-dasharray": [4, 2],
+          },
+        });
 
-      // Label no centro do bairro
-      map.addLayer({
-        id: "monte-siao-label",
-        type: "symbol",
-        source: "monte-siao",
-        layout: {
-          "text-field": "Área de Atendimento\nZion Soluções",
-          "text-size": 13,
-          "text-anchor": "center",
-          "text-font": ["Open Sans SemiBold", "Arial Unicode MS Bold"],
-        },
-        paint: {
-          "text-color": "#14532d",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 2,
-        },
-      });
+        map.addLayer({
+          id: "monte-siao-label",
+          type: "symbol",
+          source: "monte-siao",
+          layout: {
+            "text-field": "Área de Atendimento\nZion Soluções",
+            "text-size": 13,
+            "text-anchor": "center",
+            "text-font": ["Open Sans SemiBold", "Arial Unicode MS Bold"],
+          },
+          paint: {
+            "text-color": "#14532d",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 2,
+          },
+        });
 
-      // Marker no centro
-      new mapboxgl.Marker({ color: "#16a34a" })
-        .setLngLat(CENTER)
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(
-            `<div style="font-family:sans-serif;padding:4px 2px">
-              <strong>Zion Soluções</strong><br/>
-              <span style="font-size:12px;color:#555">Bairro Monte Sião · Manaus/AM</span><br/>
-              <span style="font-size:12px;color:#555">Crédito de R$100 a R$1.000</span>
-            </div>`,
-          ),
-        )
-        .addTo(map);
+        new mgl.Marker({ color: "#16a34a" })
+          .setLngLat(CENTER)
+          .setPopup(
+            new mgl.Popup({ offset: 25 }).setHTML(
+              `<div style="font-family:sans-serif;padding:4px 2px">
+                <strong>Zion Soluções</strong><br/>
+                <span style="font-size:12px;color:#555">Bairro Monte Sião · Manaus/AM</span><br/>
+                <span style="font-size:12px;color:#555">Crédito de R$100 a R$1.000</span>
+              </div>`,
+            ),
+          )
+          .addTo(map);
+      });
     });
 
     return () => {
-      map.remove();
+      cancelled = true;
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, []);
