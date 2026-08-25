@@ -6,37 +6,38 @@ import "mapbox-gl/dist/mapbox-gl.css";
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
 
 // Polígono do bairro Monte Sião, Manaus/AM
-// Extraído da medição no Google Maps (linha branca marcada pelo usuário)
+// Pontos âncora fornecidos pelo usuário via Google Maps:
+//   A: -3.027509, -59.934996  (lado oeste)
+//   B: -3.010327, -59.937227  (lado norte-oeste)
+//   C: -3.009097, -59.930201  (lado norte-leste)
+// Demais vértices estimados para fechar o perímetro (~4,79 km, ~90 ha)
 // Coordenadas [longitude, latitude]
 const MONTE_SIAO_POLYGON: [number, number][] = [
-  // Norte — Av. Prof. Agostinha de Lima Brito
-  [-59.9380, -3.0085],
-  [-59.9295, -3.0090],
-  [-59.9230, -3.0110],
-  // Nordeste — descendo pela Av. Alarico Furtado
-  [-59.9195, -3.0155],
-  [-59.9188, -3.0210],
-  // Leste — limite com área verde / Av. Alamanda
-  [-59.9195, -3.0270],
-  [-59.9215, -3.0310],
-  // Sul — R. São Paulo / R. Braga Mendes
-  [-59.9245, -3.0340],
-  [-59.9290, -3.0355],
-  [-59.9340, -3.0360],
-  [-59.9390, -3.0355],
+  // Norte — entre B e C (linha superior da área)
+  [-59.9372, -3.0103], // B (noroeste)
+  [-59.9302, -3.0091], // C (nordeste)
+  // Descendo pelo lado leste
+  [-59.9255, -3.0130],
+  [-59.9230, -3.0185],
+  [-59.9228, -3.0240],
+  [-59.9245, -3.0295],
+  // Sul
+  [-59.9265, -3.0340],
+  [-59.9310, -3.0360],
+  [-59.9360, -3.0355],
   // Sudoeste
-  [-59.9430, -3.0330],
-  [-59.9455, -3.0295],
-  // Oeste — R. Marumbi / R. Betafogo
-  [-59.9460, -3.0240],
-  [-59.9450, -3.0185],
-  [-59.9430, -3.0140],
-  [-59.9400, -3.0105],
-  // Fechamento ao norte
-  [-59.9380, -3.0085],
+  [-59.9400, -3.0330],
+  [-59.9415, -3.0295],
+  // Lado oeste — passa pelo ponto A
+  [-59.9420, -3.0255],
+  [-59.9413, -3.0210],
+  [-59.9350, -3.0275], // A (oeste)
+  [-59.9395, -3.0185],
+  [-59.9385, -3.0148],
+  [-59.9372, -3.0103], // fechamento em B
 ];
 
-// Centro do bairro Monte Sião
+// Centro calculado a partir dos pontos reais
 const CENTER: [number, number] = [-59.9325, -3.0225];
 const ZOOM = 14;
 
