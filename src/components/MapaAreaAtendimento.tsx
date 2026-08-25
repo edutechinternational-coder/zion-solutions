@@ -11,9 +11,13 @@ async function getMapbox() {
     // handle both ESM default and CJS exports
     const m = (mod as unknown as { default?: typeof import("mapbox-gl") }).default ?? mod;
     mapboxgl = m as typeof import("mapbox-gl");
-    // Set token immediately after loading, before any Map instantiation
-    const token = import.meta.env["VITE_MAPBOX_ACCESS_TOKEN"] as string | undefined;
-    if (token) mapboxgl.accessToken = token;
+    // pk.* tokens are public by Mapbox design — safe to include in client code.
+    // Falls back to the hardcoded public token if the env var is not injected
+    // (e.g. Lovable preview environment).
+    const token =
+      (import.meta.env["VITE_MAPBOX_ACCESS_TOKEN"] as string | undefined) ||
+      "pk.eyJ1IjoidGVjaC1lZHUtbGFiIiwiYSI6ImNtbjJ6d3VkNzB6OG8ycHNqMTJ0OGNwN3YifQ.mc06DX2ubMuDcbfJo2R7zA";
+    mapboxgl.accessToken = token;
   }
   return mapboxgl;
 }
