@@ -122,7 +122,7 @@ function maskCep(value: string) {
 function maskPhone(value: string) {
   const trimmed = value.trim();
   const countryCode = trimmed.startsWith("+")
-    ? `+${onlyDigits(trimmed.split(" ")[0]).slice(0, 3)}`
+    ? `+${onlyDigits(trimmed.split(" ")[0] ?? "").slice(0, 3)}`
     : "+55";
   const localValue = trimmed.startsWith("+") ? trimmed.replace(/^\+\d{1,3}\s*/, "") : trimmed;
   const digits = onlyDigits(localValue).slice(0, 11);
