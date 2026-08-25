@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // mapbox-gl é carregado dinamicamente para evitar bundle SSR (>2MB)
 // O componente é client-only
@@ -8,12 +8,15 @@ let mapboxgl: typeof import("mapbox-gl") | null = null;
 async function getMapbox() {
   if (!mapboxgl) {
     const mod = await import("mapbox-gl");
-    mapboxgl = mod.default ?? (mod as unknown as typeof import("mapbox-gl"));
+    // handle both ESM default and CJS exports
+    const m = (mod as unknown as { default?: typeof import("mapbox-gl") }).default ?? mod;
+    mapboxgl = m as typeof import("mapbox-gl");
+    // Set token immediately after loading, before any Map instantiation
+    const token = import.meta.env["VITE_MAPBOX_ACCESS_TOKEN"] as string | undefined;
+    if (token) mapboxgl.accessToken = token;
   }
   return mapboxgl;
 }
-
-// Token da variável de ambiente — aplicado dinamicamente no useEffect
 
 // Polígono do bairro Monte Sião, Manaus/AM
 // Todos os vértices fornecidos pelo usuário via Google Maps "Medir distância"
@@ -46,6 +49,7 @@ const ZOOM = 14;
 export function MapaAreaAtendimento() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [tokenMissing, setTokenMissing] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
@@ -55,6 +59,13 @@ export function MapaAreaAtendimento() {
     getMapbox().then((mgl) => {
       if (cancelled || !mapContainer.current || mapRef.current) return;
 
+      // Guard: if token is missing, show a placeholder instead of crashing
+      if (!mgl.accessToken) {
+        console.warn("[MapaAreaAtendimento] VITE_MAPBOX_ACCESS_TOKEN não configurado");
+        setTokenMissing(true);
+        return;
+      }
+
       // Inject CSS once
       if (!document.querySelector('link[href*="mapbox-gl"]')) {
         const link = document.createElement("link");
@@ -63,8 +74,7 @@ export function MapaAreaAtendimento() {
         document.head.appendChild(link);
       }
 
-      mgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
-
+      // Token already set in getMapbox() — do NOT set again here to avoid timing issues
       const map = new mgl.Map({
         container: mapContainer.current,
         style:
@@ -164,12 +174,21 @@ export function MapaAreaAtendimento() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border shadow-sm">
-        <div
-          ref={mapContainer}
-          className="h-[420px] w-full"
-          role="img"
-          aria-label="Mapa destacando o bairro Monte Sião em Manaus"
-        />
+        {tokenMissing ? (
+          <div className="flex h-[420px] w-full items-center justify-center bg-secondary/40">
+            <div className="text-center space-y-2 text-muted-foreground">
+              <p className="text-sm font-medium">Mapa indisponível neste ambiente</p>
+              <p className="text-xs">Bairro Monte Sião · Manaus/AM</p>
+            </div>
+          </div>
+        ) : (
+          <div
+            ref={mapContainer}
+            className="h-[420px] w-full"
+            role="img"
+            aria-label="Mapa destacando o bairro Monte Sião em Manaus"
+          />
+        )}
       </div>
 
       <p className="mt-3 text-center text-xs text-muted-foreground">
