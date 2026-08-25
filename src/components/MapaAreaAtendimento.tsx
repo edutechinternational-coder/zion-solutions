@@ -5,23 +5,39 @@ import "mapbox-gl/dist/mapbox-gl.css";
 // Token da variável de ambiente
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
 
-// Polígono aproximado do bairro Monte Sião, Manaus/AM
+// Polígono do bairro Monte Sião, Manaus/AM
+// Extraído da medição no Google Maps (linha branca marcada pelo usuário)
 // Coordenadas [longitude, latitude]
 const MONTE_SIAO_POLYGON: [number, number][] = [
-  [-60.0412, -3.0521],
-  [-60.0368, -3.0521],
-  [-60.0338, -3.0548],
-  [-60.0338, -3.0592],
-  [-60.0358, -3.0618],
-  [-60.0395, -3.0632],
-  [-60.0435, -3.0618],
-  [-60.0458, -3.0585],
-  [-60.0450, -3.0548],
-  [-60.0412, -3.0521],
+  // Norte — Av. Prof. Agostinha de Lima Brito
+  [-59.9380, -3.0085],
+  [-59.9295, -3.0090],
+  [-59.9230, -3.0110],
+  // Nordeste — descendo pela Av. Alarico Furtado
+  [-59.9195, -3.0155],
+  [-59.9188, -3.0210],
+  // Leste — limite com área verde / Av. Alamanda
+  [-59.9195, -3.0270],
+  [-59.9215, -3.0310],
+  // Sul — R. São Paulo / R. Braga Mendes
+  [-59.9245, -3.0340],
+  [-59.9290, -3.0355],
+  [-59.9340, -3.0360],
+  [-59.9390, -3.0355],
+  // Sudoeste
+  [-59.9430, -3.0330],
+  [-59.9455, -3.0295],
+  // Oeste — R. Marumbi / R. Betafogo
+  [-59.9460, -3.0240],
+  [-59.9450, -3.0185],
+  [-59.9430, -3.0140],
+  [-59.9400, -3.0105],
+  // Fechamento ao norte
+  [-59.9380, -3.0085],
 ];
 
-// Centro do bairro
-const CENTER: [number, number] = [-60.0398, -3.0578];
+// Centro do bairro Monte Sião
+const CENTER: [number, number] = [-59.9325, -3.0225];
 const ZOOM = 14;
 
 export function MapaAreaAtendimento() {
