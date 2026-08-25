@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
 import { Simulador } from "@/components/Simulador";
+import { ClientesCarrossel } from "@/components/ClientesCarrossel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import heroImg from "@/assets/monte-siao.jpg";
@@ -104,6 +105,8 @@ function Index() {
             />
           </div>
         </section>
+
+        <ClientesCarrossel />
 
         <section id="simulador" className="mx-auto max-w-6xl px-4 py-16">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
