@@ -84,15 +84,28 @@ function AuthPage() {
   }
 
   async function entrarComGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Falha no login com Google");
-      return;
+    // lovable.auth.signInWithOAuth only works on Lovable-hosted domains (uses /~oauth/initiate).
+    // On Render (or any other host), fall back to native Supabase OAuth.
+    const isLovable =
+      typeof window !== "undefined" && window.location.hostname.endsWith(".lovable.app");
+
+    if (isLovable) {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error("Falha no login com Google");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/painel" });
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/painel` },
+      });
+      if (error) toast.error("Falha no login com Google", { description: error.message });
     }
-    if (result.redirected) return;
-    navigate({ to: "/painel" });
   }
 
   return (
