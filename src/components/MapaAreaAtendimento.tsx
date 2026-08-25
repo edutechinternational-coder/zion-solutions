@@ -6,39 +6,31 @@ import "mapbox-gl/dist/mapbox-gl.css";
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string;
 
 // Polígono do bairro Monte Sião, Manaus/AM
-// Pontos âncora fornecidos pelo usuário via Google Maps:
-//   A: -3.027509, -59.934996  (lado oeste)
-//   B: -3.010327, -59.937227  (lado norte-oeste)
-//   C: -3.009097, -59.930201  (lado norte-leste)
-// Demais vértices estimados para fechar o perímetro (~4,79 km, ~90 ha)
-// Coordenadas [longitude, latitude]
+// Todos os vértices fornecidos pelo usuário via Google Maps "Medir distância"
+// Convertidos de [lat, lng] → [lng, lat] (formato GeoJSON/Mapbox)
 const MONTE_SIAO_POLYGON: [number, number][] = [
-  // Norte — entre B e C (linha superior da área)
-  [-59.9372, -3.0103], // B (noroeste)
-  [-59.9302, -3.0091], // C (nordeste)
-  // Descendo pelo lado leste
-  [-59.9255, -3.0130],
-  [-59.9230, -3.0185],
-  [-59.9228, -3.0240],
-  [-59.9245, -3.0295],
-  // Sul
-  [-59.9265, -3.0340],
-  [-59.9310, -3.0360],
-  [-59.9360, -3.0355],
-  // Sudoeste
-  [-59.9400, -3.0330],
-  [-59.9415, -3.0295],
-  // Lado oeste — passa pelo ponto A
-  [-59.9420, -3.0255],
-  [-59.9413, -3.0210],
-  [-59.9350, -3.0275], // A (oeste)
-  [-59.9395, -3.0185],
-  [-59.9385, -3.0148],
-  [-59.9372, -3.0103], // fechamento em B
+  [-59.937227, -3.010327], // 1  noroeste
+  [-59.930395, -3.009926], // 2  norte
+  [-59.928936, -3.013483], // 3  nordeste
+  [-59.931168, -3.012883], // 4
+  [-59.931813, -3.013998], // 5
+  [-59.930620, -3.023091], // 6  leste
+  [-59.932173, -3.028916], // 7  sudeste
+  [-59.932270, -3.028921], // 8
+  [-59.932353, -3.023511], // 9
+  [-59.933442, -3.022397], // 10
+  [-59.933399, -3.021626], // 11
+  [-59.933485, -3.020040], // 12
+  [-59.935202, -3.019997], // 13 oeste
+  [-59.935674, -3.018197], // 14
+  [-59.935416, -3.017169], // 15
+  [-59.936489, -3.014212], // 16
+  [-59.936146, -3.013011], // 17
+  [-59.937262, -3.010397], // 18 fechamento → volta ao ponto 1
 ];
 
-// Centro calculado a partir dos pontos reais
-const CENTER: [number, number] = [-59.9325, -3.0225];
+// Centro calculado a partir do bbox dos pontos reais
+const CENTER: [number, number] = [-59.9330, -3.0194];
 const ZOOM = 14;
 
 export function MapaAreaAtendimento() {
