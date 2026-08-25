@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
 import { Simulador } from "@/components/Simulador";
 import { ClientesCarrossel } from "@/components/ClientesCarrossel";
+import { MapaAreaAtendimento } from "@/components/MapaAreaAtendimento";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import heroImg from "@/assets/monte-siao.jpg";
@@ -127,10 +128,11 @@ function Index() {
           </div>
         </section>
 
+        <MapaAreaAtendimento />
+
         <section className="bg-secondary/50 py-16">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-3xl font-semibold">Como funciona</h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <h2 className="text-3xl font-semibold">Como funciona</h2>            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PASSOS.map((p, i) => (
                 <Card key={p.titulo} className="border-border/70">
                   <CardContent className="space-y-2 p-5">
