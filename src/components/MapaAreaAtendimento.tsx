@@ -15,6 +15,7 @@ async function getMapbox() {
     // Falls back to the hardcoded public token if the env var is not injected
     // (e.g. Lovable preview environment).
     const token =
+      (import.meta.env["VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN"] as string | undefined) ||
       (import.meta.env["VITE_MAPBOX_ACCESS_TOKEN"] as string | undefined) ||
       "pk.eyJ1IjoidGVjaC1lZHUtbGFiIiwiYSI6ImNtbjJ6d3VkNzB6OG8ycHNqMTJ0OGNwN3YifQ.mc06DX2ubMuDcbfJo2R7zA";
     mapboxgl.accessToken = token;
