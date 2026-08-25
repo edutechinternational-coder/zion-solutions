@@ -244,7 +244,7 @@ export type Database = {
         Args: {
           _actor: string
           _principal_cents: number
-          _purpose?: string
+          _purpose: string
           _term_months: number
         }
         Returns: {
