@@ -10,15 +10,4 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    ssr: {
-      noExternal: [],
-      external: ["mapbox-gl"],
-    },
-    build: {
-      rollupOptions: {
-        external: ["mapbox-gl"],
-      },
-    },
-  },
 });
