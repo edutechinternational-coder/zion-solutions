@@ -3,14 +3,16 @@ import { useEffect, useRef, useState } from "react";
 // mapbox-gl é carregado dinamicamente para evitar bundle SSR (>2MB)
 // O componente é client-only
 
-let mapboxgl: typeof import("mapbox-gl") | null = null;
+type MapboxRuntime = typeof import("mapbox-gl") & { accessToken: string };
+
+let mapboxgl: MapboxRuntime | null = null;
 
 async function getMapbox() {
   if (!mapboxgl) {
     const mod = await import("mapbox-gl");
     // handle both ESM default and CJS exports
     const m = (mod as unknown as { default?: typeof import("mapbox-gl") }).default ?? mod;
-    mapboxgl = m as typeof import("mapbox-gl");
+    mapboxgl = m as MapboxRuntime;
     // pk.* tokens are public by Mapbox design — safe to include in client code.
     // Falls back to the hardcoded public token if the env var is not injected
     // (e.g. Lovable preview environment).
@@ -75,7 +77,7 @@ export function MapaAreaAtendimento() {
       if (!document.querySelector('link[href*="mapbox-gl"]')) {
         const link = document.createElement("link");
         link.rel = "stylesheet";
-        link.href = "https://api.mapbox.gl/mapbox-gl-js/v3.9.0/mapbox-gl.css";
+        link.href = "https://api.mapbox.com/mapbox-gl-js/v3.9.0/mapbox-gl.css";
         document.head.appendChild(link);
       }
 
@@ -83,7 +85,7 @@ export function MapaAreaAtendimento() {
       const map = new mgl.Map({
         container: mapContainer.current,
         style:
-          (import.meta.env.VITE_MAPBOX_STYLE_URL as string) ||
+          (import.meta.env["VITE_MAPBOX_STYLE_URL"] as string) ||
           "mapbox://styles/mapbox/streets-v12",
         center: CENTER,
         zoom: ZOOM,
