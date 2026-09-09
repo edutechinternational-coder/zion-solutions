@@ -7,6 +7,18 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    // Public Lovable Cloud connection values. Keeping these build-time fallbacks
+    // prevents published browser bundles from depending on server-only env vars.
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        "https://rngobfmjfnmsqkacurnp.supabase.co",
+      ),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+        "sb_publishable_p-dqH_T49gRU4hqNit2ZEQ_bRul9Pg6",
+      ),
+    },
+  },
   tanstackStart: {
     server: { entry: "server" },
   },
