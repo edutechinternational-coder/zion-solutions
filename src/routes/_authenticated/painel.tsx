@@ -600,16 +600,23 @@ function Painel() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <CardTitle className="text-lg">Meus dados</CardTitle>
                       <Badge
-                        variant="outline"
-                        className="border-amber-300 bg-amber-50 text-amber-800"
+                        variant={cadastro.etapa === 3 ? "default" : "outline"}
+                        className={
+                          cadastro.etapa === 3
+                            ? undefined
+                            : "border-amber-300 bg-amber-50 text-amber-800"
+                        }
                       >
-                        Cadastro: etapa 2 de 3
+                        Cadastro: etapa {cadastro.etapa} de 3
                       </Badge>
                     </div>
-                    <CardDescription>
-                      Preencha seus dados. Depois, a operação confirma documento/selfie e endereço
-                      no Monte Sião.
-                    </CardDescription>
+                    <CardDescription>{cadastro.rotulo}</CardDescription>
+                    <div className="space-y-2 pt-2">
+                      <Progress value={(cadastro.etapa / 3) * 100} />
+                      <p className="text-xs text-muted-foreground">
+                        1. Seus dados · 2. Confirmação do endereço · 3. Pronto para pedir crédito
+                      </p>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {perfil ? (
