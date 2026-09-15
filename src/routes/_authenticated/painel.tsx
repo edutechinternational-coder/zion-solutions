@@ -370,9 +370,6 @@ function Painel() {
               Seu crédito no Monte Sião, sempre transparente — 2% ao mês, sem taxa escondida.
             </p>
           </div>
-          <p className="rounded-full bg-secondary px-4 py-2 text-sm text-muted-foreground">
-            Acompanhe tudo em um só lugar
-          </p>
         </header>
 
         {carregando ? (
