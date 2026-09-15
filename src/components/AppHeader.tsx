@@ -29,7 +29,7 @@ export function AppHeader() {
                 <Link to="/painel">Meu painel</Link>
               </Button>
               {isAdmin ? (
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild size="sm">
                   <Link to="/admin">Operação</Link>
                 </Button>
               ) : null}
