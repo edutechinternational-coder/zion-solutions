@@ -159,8 +159,32 @@ function buildPhoneValue(countryCode: string, localValue: string) {
 
 function addressBadgeVariant(status: string) {
   if (status === "verificado") return "default" as const;
-  if (status === "reprovado") return "destructive" as const;
+  if (status === "reprovado" || status === "recusado") return "destructive" as const;
   return "outline" as const;
+}
+
+const ADDRESS_STATUS_LABEL: Record<string, string> = {
+  pendente: "Endereço aguardando confirmação",
+  verificado: "Endereço confirmado",
+  recusado: "Endereço não confirmado",
+  reprovado: "Endereço não confirmado",
+};
+
+function cadastroEtapa(perfil: Profile | null, temPedido: boolean) {
+  const dadosOk = Boolean(
+    perfil?.full_name?.trim() &&
+      onlyDigits(perfil?.cpf ?? "").length === 11 &&
+      onlyDigits(perfil?.phone ?? "").length >= 10 &&
+      perfil?.street?.trim(),
+  );
+  const enderecoOk = perfil?.address_status === "verificado";
+  const etapa = !dadosOk ? 1 : !enderecoOk ? 2 : temPedido ? 3 : 3;
+  const rotulo = !dadosOk
+    ? "Preencha seus dados"
+    : !enderecoOk
+      ? "Aguardando confirmação do endereço"
+      : "Cadastro concluído";
+  return { etapa, rotulo, dadosOk, enderecoOk };
 }
 
 function statusVariant(status: string) {
