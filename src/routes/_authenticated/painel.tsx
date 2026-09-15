@@ -159,8 +159,32 @@ function buildPhoneValue(countryCode: string, localValue: string) {
 
 function addressBadgeVariant(status: string) {
   if (status === "verificado") return "default" as const;
-  if (status === "reprovado") return "destructive" as const;
+  if (status === "reprovado" || status === "recusado") return "destructive" as const;
   return "outline" as const;
+}
+
+const ADDRESS_STATUS_LABEL: Record<string, string> = {
+  pendente: "Endereço aguardando confirmação",
+  verificado: "Endereço confirmado",
+  recusado: "Endereço não confirmado",
+  reprovado: "Endereço não confirmado",
+};
+
+function cadastroEtapa(perfil: Profile | null, temPedido: boolean) {
+  const dadosOk = Boolean(
+    perfil?.full_name?.trim() &&
+      onlyDigits(perfil?.cpf ?? "").length === 11 &&
+      onlyDigits(perfil?.phone ?? "").length >= 10 &&
+      perfil?.street?.trim(),
+  );
+  const enderecoOk = perfil?.address_status === "verificado";
+  const etapa = !dadosOk ? 1 : !enderecoOk ? 2 : temPedido ? 3 : 3;
+  const rotulo = !dadosOk
+    ? "Preencha seus dados"
+    : !enderecoOk
+      ? "Aguardando confirmação do endereço"
+      : "Cadastro concluído";
+  return { etapa, rotulo, dadosOk, enderecoOk };
 }
 
 function statusVariant(status: string) {
@@ -332,6 +356,7 @@ function Painel() {
   const totalPago = payments.reduce((acc, p) => acc + p.amount_cents, 0);
 
   const primeiroNome = (perfil?.full_name || "").trim().split(" ")[0];
+  const cadastro = cadastroEtapa(perfil, loans.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -346,9 +371,6 @@ function Painel() {
               Seu crédito no Monte Sião, sempre transparente — 2% ao mês, sem taxa escondida.
             </p>
           </div>
-          <p className="rounded-full bg-secondary px-4 py-2 text-sm text-muted-foreground">
-            Acompanhe tudo em um só lugar
-          </p>
         </header>
 
         {carregando ? (
@@ -578,16 +600,23 @@ function Painel() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <CardTitle className="text-lg">Meus dados</CardTitle>
                       <Badge
-                        variant="outline"
-                        className="border-amber-300 bg-amber-50 text-amber-800"
+                        variant={cadastro.etapa === 3 ? "default" : "outline"}
+                        className={
+                          cadastro.etapa === 3
+                            ? undefined
+                            : "border-amber-300 bg-amber-50 text-amber-800"
+                        }
                       >
-                        Cadastro: etapa 2 de 3
+                        Cadastro: etapa {cadastro.etapa} de 3
                       </Badge>
                     </div>
-                    <CardDescription>
-                      Preencha seus dados. Depois, a operação confirma documento/selfie e endereço
-                      no Monte Sião.
-                    </CardDescription>
+                    <CardDescription>{cadastro.rotulo}</CardDescription>
+                    <div className="space-y-2 pt-2">
+                      <Progress value={(cadastro.etapa / 3) * 100} />
+                      <p className="text-xs text-muted-foreground">
+                        1. Seus dados · 2. Confirmação do endereço · 3. Pronto para pedir crédito
+                      </p>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {perfil ? (
@@ -710,7 +739,8 @@ function Painel() {
                                     : undefined
                                 }
                               >
-                                Endereço: {perfil.address_status}
+                                {ADDRESS_STATUS_LABEL[perfil.address_status] ??
+                                  `Endereço: ${perfil.address_status}`}
                               </Badge>
                               <p className="text-sm text-muted-foreground">
                                 {buscandoCep
