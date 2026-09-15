@@ -739,7 +739,8 @@ function Painel() {
                                     : undefined
                                 }
                               >
-                                Endereço: {perfil.address_status}
+                                {ADDRESS_STATUS_LABEL[perfil.address_status] ??
+                                  `Endereço: ${perfil.address_status}`}
                               </Badge>
                               <p className="text-sm text-muted-foreground">
                                 {buscandoCep
