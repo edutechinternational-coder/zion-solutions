@@ -356,6 +356,7 @@ function Painel() {
   const totalPago = payments.reduce((acc, p) => acc + p.amount_cents, 0);
 
   const primeiroNome = (perfil?.full_name || "").trim().split(" ")[0];
+  const cadastro = cadastroEtapa(perfil, loans.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
