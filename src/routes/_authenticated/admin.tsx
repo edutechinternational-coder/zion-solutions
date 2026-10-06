@@ -32,6 +32,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { aba?: "pendentes" | "ativos" | "todos" } => {
+    const a = s["aba"];
+    return a === "pendentes" || a === "ativos" || a === "todos" ? { aba: a } : {};
+  },
   component: Admin,
 });
 
@@ -58,6 +62,8 @@ type Capital = {
 
 function Admin() {
   const { isAdmin, loading } = useAuth();
+  const { aba } = Route.useSearch();
+  const navegar = Route.useNavigate();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [capital, setCapital] = useState<Capital | null>(null);
@@ -223,7 +229,10 @@ function Admin() {
           </Card>
         </div>
 
-        <Tabs defaultValue="pendentes">
+        <Tabs
+          value={aba ?? "pendentes"}
+          onValueChange={(v) => navegar({ search: { aba: v as "pendentes" | "ativos" | "todos" } })}
+        >
           <TabsList>
             <TabsTrigger value="pendentes">Solicitações ({pendentes.length})</TabsTrigger>
             <TabsTrigger value="ativos">Carteira ({ativos.length})</TabsTrigger>
