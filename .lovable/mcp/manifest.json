@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "sdk_version": "3.0.5",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rngobfmjfnmsqkacurnp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "monte-si-o-microcr-dito",
+      "version": "0.1.0",
+      "title": "Monte Sião Microcrédito"
+    },
+    "tools": [
+      {
+        "name": "simulate_loan",
+        "title": "Simular empréstimo",
+        "description": "Calcula parcela e total de um microcrédito Zion (2% ao mês, Tabela Price).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "valor_reais": {
+              "type": "number",
+              "minimum": 100,
+              "maximum": 1000,
+              "description": "Valor pedido em reais (R$ 100 a R$ 1.000)."
+            },
+            "meses": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Prazo em meses: 1, 2, 3, 4 ou 6."
+            }
+          },
+          "required": [
+            "valor_reais",
+            "meses"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_loans",
+        "title": "Meus empréstimos",
+        "description": "Lista os empréstimos da conta conectada, com status e valores pagos.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_payments",
+        "title": "Meus pagamentos",
+        "description": "Lista os pagamentos registrados nos empréstimos da conta conectada.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
