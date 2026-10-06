@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { aba?: "pendentes" | "ativos" | "todos" } => {
-    const a = s.aba;
+    const a = s["aba"];
     return a === "pendentes" || a === "ativos" || a === "todos" ? { aba: a } : {};
   },
   component: Admin,
