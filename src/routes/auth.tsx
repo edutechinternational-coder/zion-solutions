@@ -37,11 +37,25 @@ function AuthPage() {
   const [nome, setNome] = useState("");
   const [carregando, setCarregando] = useState(false);
 
+  async function irParaInicio() {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    navigate({ to: role ? "/admin" : "/painel" });
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/painel" });
+      if (data.session) void irParaInicio();
     });
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +66,7 @@ function AuthPage() {
       toast.error("Não foi possível entrar", { description: error.message });
       return;
     }
-    navigate({ to: "/painel" });
+    await irParaInicio();
   }
 
   async function cadastrar(e: React.FormEvent) {

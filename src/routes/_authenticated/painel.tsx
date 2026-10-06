@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
@@ -202,6 +202,10 @@ function installmentVariant(status: Installment["status"]) {
 
 function Painel() {
   const { isAdmin } = useAuth();
+  const irPara = useNavigate();
+  useEffect(() => {
+    if (isAdmin) irPara({ to: "/admin", replace: true });
+  }, [isAdmin, irPara]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [perfil, setPerfil] = useState<Profile | null>(null);
@@ -464,22 +468,6 @@ function Painel() {
               </Card>
             )}
 
-            {isAdmin ? (
-              <Card className="border-primary/40 bg-primary/5">
-                <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
-                  <div className="space-y-1">
-                    <p className="font-medium">Você é da operação Zion</p>
-                    <p className="text-sm text-muted-foreground">
-                      Acesse o painel da operação para ver o capital disponível, aprovar
-                      solicitações e registrar pagamentos.
-                    </p>
-                  </div>
-                  <Button asChild variant="secondary">
-                    <Link to="/admin">Abrir painel da operação</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : null}
 
             <Tabs defaultValue="parcelas">
               <TabsList>
