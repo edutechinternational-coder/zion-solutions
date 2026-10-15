@@ -50,7 +50,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   component: Consent,
   errorComponent: ({ error }) => (
     <main className="mx-auto max-w-md p-10 text-center text-sm text-muted-foreground">
-      Não foi possível carregar este pedido: {error.message}
+      Não foi possível carregar este pedido: {error instanceof Error ? error.message : String(error)}
     </main>
   ),
 });
