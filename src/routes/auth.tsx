@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,11 +28,16 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } =>
+    typeof s["next"] === "string" ? { next: s["next"] } : {},
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next: nextRaw } = Route.useSearch();
+  const next = nextRaw ? oauthReturnPath(nextRaw) : null;
+  const destinoAbs = () => (next ? new URL(next, window.location.origin).href : null);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
@@ -41,6 +47,10 @@ function AuthPage() {
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
     if (!uid) return;
+    if (next && next !== "/") {
+      window.location.href = next;
+      return;
+    }
     const { data: role } = await supabase
       .from("user_roles")
       .select("role")
@@ -84,7 +94,7 @@ function AuthPage() {
       email,
       password: senha,
       options: {
-        emailRedirectTo: `${window.location.origin}/painel`,
+        emailRedirectTo: destinoAbs() ?? `${window.location.origin}/painel`,
         data: { full_name: nome.trim() },
       },
     });
@@ -105,18 +115,18 @@ function AuthPage() {
 
     if (isLovable) {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: destinoAbs() ?? window.location.origin,
       });
       if (result.error) {
         toast.error("Falha no login com Google");
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/painel" });
+      await irParaInicio();
     } else {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/painel` },
+        options: { redirectTo: destinoAbs() ?? `${window.location.origin}/painel` },
       });
       if (error) toast.error("Falha no login com Google", { description: error.message });
     }
