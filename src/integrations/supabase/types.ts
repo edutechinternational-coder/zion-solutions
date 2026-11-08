@@ -205,6 +205,42 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_messages: {
+        Row: {
+          chat_id: number
+          created_at: string
+          direction: string
+          id: string
+          message_id: number
+          sender_name: string
+          sent_by: string | null
+          text: string
+          update_id: number | null
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          direction: string
+          id?: string
+          message_id: number
+          sender_name: string
+          sent_by?: string | null
+          text: string
+          update_id?: number | null
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          message_id?: number
+          sender_name?: string
+          sent_by?: string | null
+          text?: string
+          update_id?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

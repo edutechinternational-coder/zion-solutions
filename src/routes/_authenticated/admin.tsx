@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { decideLoan, getCapitalSummary, registerPayment } from "@/lib/admin.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { TelegramInbox } from "@/components/TelegramInbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -341,6 +342,7 @@ function Admin() {
             ))}
           </TabsContent>
         </Tabs>
+        <TelegramInbox />
       </main>
     </div>
   );
